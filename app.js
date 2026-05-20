@@ -1,93 +1,67 @@
 // ============================================================
-//  CDM 2026 – app.js
-//  Persistance via API GitHub : chaque sauvegarde écrit
-//  players.js et/ou matches.js directement dans le repo.
+//  CDM 2026 – app.js (Version Locale / Sans Token)
 // ============================================================
 
-const ADMIN_PASSWORD = "cdm_as";
+const ADMIN_PASSWORD = "cdm_as"; 
 let isAdmin = false;
 let currentFilter = "all";
 
-// ---- Config GitHub (en dur) ----
-
-
 // ============================================================
-//  API GITHUB
+//  CHARGEMENT LOCALSTORAGE (Survit au refresh)
 // ============================================================
 
-async function ghGet(path) {
-  const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`, {
-    headers: { Authorization: `token ${GH_TOKEN}`, Accept: "application/vnd.github+json" }
-  });
-  if (!r.ok) throw new Error(`GitHub GET ${path} → ${r.status}`);
-  return r.json();
-}
-
-async function ghPut(path, content, message, sha) {
-  const body = { message, content: btoa(unescape(encodeURIComponent(content))), branch: GH_BRANCH };
-  if (sha) body.sha = sha;
-  const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
-    method: "PUT",
-    headers: {
-      Authorization: `token ${GH_TOKEN}`,
-      Accept: "application/vnd.github+json",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(body)
-  });
-  if (!r.ok) {
-    const err = await r.json();
-    throw new Error(err.message || `GitHub PUT ${path} → ${r.status}`);
+function initData() {
+  // Charge les joueurs depuis le localStorage s'ils existent, sinon garde ceux du fichier players.js
+  const localPlayers = localStorage.getItem("cdm_players");
+  if (localPlayers) {
+    players = JSON.parse(localPlayers);
   }
-  return r.json();
-}
 
-// Récupère le SHA actuel d'un fichier (nécessaire pour le mettre à jour)
-async function getSha(path) {
-  try {
-    const data = await ghGet(path);
-    return data.sha;
-  } catch { return null; }
-}
+  // Charge les scores depuis le localStorage
+  const localScores = localStorage.getItem("cdm_scores");
+  let scoresToApply = typeof matchScores !== "undefined" ? matchScores : [];
+  if (localScores) {
+    scoresToApply = JSON.parse(localScores);
+  }
 
-// ============================================================
-//  SAUVEGARDE GITHUB
-// ============================================================
-
-function serializePlayers() {
-  return `let players = ${JSON.stringify(players, null, 2)};\n`;
-}
-
-function serializeMatches() {
-  // On sérialise uniquement les scores (le reste ne change pas)
-  const scores = matches.map(m => ({ id: m.id, score1: m.score1, score2: m.score2 }));
-  return `// Scores CDM 2026 – mis à jour automatiquement\nconst matchScores = ${JSON.stringify(scores, null, 2)};\n`;
-}
-
-async function pushPlayers(msg) {
-  const sha = await getSha("players.js");
-  await ghPut("players.js", serializePlayers(), msg, sha);
-}
-
-async function pushScores(msg) {
-  const sha = await getSha("scores.js");
-  await ghPut("scores.js", serializeMatches(), msg, sha);
-}
-
-// ============================================================
-//  CHARGEMENT DES SCORES (fichier scores.js injecté dans la page)
-// ============================================================
-
-function applyScores() {
-  if (typeof matchScores === "undefined") return;
-  matchScores.forEach(s => {
+  // Applique les scores aux matchs
+  scoresToApply.forEach(s => {
     const m = matches.find(x => x.id === s.id);
     if (m) { m.score1 = s.score1; m.score2 = s.score2; }
   });
 }
 
+function saveToLocalStorage() {
+  localStorage.setItem("cdm_players", JSON.stringify(players));
+  const scores = matches.map(m => ({ id: m.id, score1: m.score1, score2: m.score2 }));
+  localStorage.setItem("cdm_scores", JSON.stringify(scores));
+}
+
 // ============================================================
-//  ADMIN LOGIN
+//  TÉLÉCHARGEMENT "EN DUR"
+// ============================================================
+
+function downloadPlayersJS() {
+  const content = `let players = ${JSON.stringify(players, null, 2)};\n`;
+  const blob = new Blob([content], { type: "text/javascript" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "players.js";
+  a.click();
+}
+
+function downloadScoresJS() {
+  const scores = matches.map(m => ({ id: m.id, score1: m.score1, score2: m.score2 }));
+  const content = `// Scores CDM 2026 – mis à jour automatiquement\nconst matchScores = ${JSON.stringify(scores, null, 2)};\n`;
+  const blob = new Blob([content], { type: "text/javascript" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "scores.js";
+  a.click();
+}
+
+// ============================================================
+//  ADMIN LOGIN / LOGOUT
 // ============================================================
 
 function loginAdmin() {
@@ -96,38 +70,41 @@ function loginAdmin() {
 
   isAdmin = true;
   sessionStorage.setItem("gh_admin", "1");
+  showAdminPanel();
+  displayMatches();
+}
 
+function showAdminPanel() {
   document.getElementById("adminPanel").style.display = "block";
   document.getElementById("adminLoginForm").style.display = "none";
+}
+
+function logoutAdmin() {
+  sessionStorage.removeItem("gh_admin");
+  isAdmin = false;
+  document.getElementById("adminPanel").style.display = "none";
+  document.getElementById("adminLoginForm").style.display = "block";
+  document.getElementById("adminPass").value = "";
   displayMatches();
-  showMsg("✅ Connecté !", "success");
 }
 
 function restoreSession() {
   if (sessionStorage.getItem("gh_admin") === "1") {
     isAdmin = true;
-    document.getElementById("adminPanel").style.display = "block";
-    document.getElementById("adminLoginForm").style.display = "none";
+    showAdminPanel();
   }
 }
 
 // ============================================================
-//  MESSAGES
+//  MESSAGES & UTILITAIRES
 // ============================================================
 
 function showMsg(txt, type) {
-  const el = document.getElementById("adminMsg");
+  const el = document.getElementById(isAdmin ? "adminMsgPanel" : "adminMsg");
   if (!el) return;
   el.textContent = txt;
   el.className = "admin-msg " + type;
   setTimeout(() => { el.textContent = ""; el.className = "admin-msg"; }, 5000);
-}
-
-function setLoading(btn, loading) {
-  if (!btn) return;
-  btn.disabled = loading;
-  btn.dataset.orig = btn.dataset.orig || btn.textContent;
-  btn.textContent = loading ? "⏳ En cours…" : btn.dataset.orig;
 }
 
 // ============================================================
@@ -158,28 +135,20 @@ function buildFilterBar() {
 //  UPDATE SCORE
 // ============================================================
 
-async function updateScore(id) {
+function updateScore(id) {
   const m  = matches.find(x => x.id === id);
   const v1 = document.getElementById(`score1-${id}`).value;
   const v2 = document.getElementById(`score2-${id}`).value;
   m.score1 = v1 !== "" ? parseInt(v1) : null;
   m.score2 = v2 !== "" ? parseInt(v2) : null;
 
-  const btn = document.querySelector(`button[onclick="updateScore(${id})"]`);
-  setLoading(btn, true);
-  try {
-    await pushScores(`Score match #${id} : ${m.team1} ${m.score1??'?'}-${m.score2??'?'} ${m.team2}`);
-    displayRanking();
-    showMsg(`✅ Score #${id} sauvegardé sur GitHub !`, "success");
-  } catch(e) {
-    showMsg("❌ Erreur GitHub : " + e.message, "error");
-  } finally {
-    setLoading(btn, false);
-  }
+  saveToLocalStorage();
+  displayRanking();
+  showMsg(`✅ Score #${id} actualisé ! (N'oublie pas d'exporter en dur)`, "success");
 }
 
 // ============================================================
-//  POINTS
+//  POINTS & CLASSEMENT
 // ============================================================
 
 function getPoints(bet, m) {
@@ -189,10 +158,6 @@ function getPoints(bet, m) {
   if ((bd > 0 && rd > 0) || (bd < 0 && rd < 0) || (bd === 0 && rd === 0)) return 1;
   return 0;
 }
-
-// ============================================================
-//  CLASSEMENT
-// ============================================================
 
 function displayRanking() {
   const div = document.getElementById("ranking");
@@ -274,12 +239,11 @@ function importBets() {
   if (!file) { showMsg("⚠️ Sélectionnez un fichier JSON.", "error"); return; }
 
   const reader = new FileReader();
-  reader.onload = async e => {
+  reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
       if (!data.name || !data.bets) throw new Error("Format invalide");
 
-      // Normalise les clés en entiers
       const bets = {};
       for (const [k, v] of Object.entries(data.bets)) bets[parseInt(k)] = v;
       data.bets = bets;
@@ -288,20 +252,10 @@ function importBets() {
       const isUpdate = existing >= 0;
       if (isUpdate) players[existing] = data; else players.push(data);
 
-      const btn = document.getElementById("importBtn");
-      setLoading(btn, true);
-      try {
-        await pushPlayers(isUpdate
-          ? `Mise à jour pronostics de ${data.name}`
-          : `Ajout pronostics de ${data.name}`);
-        displayRanking();
-        document.getElementById("fileInput").value = "";
-        showMsg(`✅ ${data.name} ${isUpdate ? "mis à jour" : "ajouté"} et sauvegardé sur GitHub !`, "success");
-      } catch(e) {
-        showMsg("❌ Erreur GitHub : " + e.message, "error");
-      } finally {
-        setLoading(btn, false);
-      }
+      saveToLocalStorage();
+      displayRanking();
+      document.getElementById("fileInput").value = "";
+      showMsg(`✅ ${data.name} intégré ! (N'oublie pas d'exporter en dur)`, "success");
     } catch(err) {
       showMsg("❌ Fichier JSON invalide : " + err.message, "error");
     }
@@ -313,31 +267,23 @@ function importBets() {
 //  RESET
 // ============================================================
 
-async function resetData() {
-  if (!confirm("Effacer TOUS les pronostics et scores ? Irréversible.")) return;
+function resetData() {
+  if (!confirm("Effacer TOUS les pronostics et scores de ton navigateur ?")) return;
   players.length = 0;
   matches.forEach(m => { m.score1 = null; m.score2 = null; });
-
-  const btn = document.getElementById("resetBtn");
-  setLoading(btn, true);
-  try {
-    await pushPlayers("Reset : suppression de tous les pronostics");
-    await pushScores("Reset : suppression de tous les scores");
-    displayRanking();
-    displayMatches();
-    showMsg("✅ Données réinitialisées sur GitHub.", "success");
-  } catch(e) {
-    showMsg("❌ Erreur GitHub : " + e.message, "error");
-  } finally {
-    setLoading(btn, false);
-  }
+  localStorage.removeItem("cdm_players");
+  localStorage.removeItem("cdm_scores");
+  
+  displayRanking();
+  displayMatches();
+  showMsg("✅ Données réinitialisées.", "success");
 }
 
 // ============================================================
 //  INIT
 // ============================================================
 
-applyScores();
+initData();
 restoreSession();
 buildFilterBar();
 displayRanking();
