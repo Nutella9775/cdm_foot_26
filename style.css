@@ -1,0 +1,456 @@
+/* ========================================
+   CDM 2026 – Styles
+   ======================================== */
+
+:root {
+  --green-deep: #022c12;
+  --green-mid: #064e27;
+  --green-bright: #16a34a;
+  --green-accent: #4ade80;
+  --gold: #f59e0b;
+  --gold-light: #fbbf24;
+  --silver: #94a3b8;
+  --bronze: #b45309;
+  --white: #f8fafc;
+  --text-muted: #94a3b8;
+  --card-bg: rgba(255,255,255,0.05);
+  --card-border: rgba(255,255,255,0.08);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--green-deep);
+  color: var(--white);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(22,163,74,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 10%, rgba(245,158,11,0.06) 0%, transparent 50%);
+}
+
+/* ---- HERO ---- */
+.hero {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  padding: 60px 20px 50px;
+  background: linear-gradient(180deg, rgba(6,78,39,0.9) 0%, var(--green-deep) 100%);
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 48px,
+      rgba(22,163,74,0.04) 48px,
+      rgba(22,163,74,0.04) 50px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 48px,
+      rgba(22,163,74,0.04) 48px,
+      rgba(22,163,74,0.04) 50px
+    );
+  pointer-events: none;
+}
+
+.hero-content { position: relative; z-index: 1; }
+
+.trophy {
+  font-size: 64px;
+  display: block;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 20px rgba(245,158,11,0.5));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(36px, 8vw, 72px);
+  letter-spacing: 4px;
+  color: var(--white);
+  text-shadow: 0 0 30px rgba(74,222,128,0.3);
+  line-height: 1;
+}
+
+.hero-sub {
+  font-size: 14px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--green-accent);
+  margin: 12px 0 28px;
+}
+
+/* ---- BUTTONS ---- */
+.btn-primary {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--green-bright), var(--green-accent));
+  color: var(--green-deep);
+  font-weight: 700;
+  font-size: 15px;
+  padding: 14px 32px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(74,222,128,0.3);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(74,222,128,0.4); }
+.btn-primary.btn-big { font-size: 17px; padding: 16px 40px; width: 100%; max-width: 400px; }
+
+.btn-secondary {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--white);
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+.btn-danger {
+  background: rgba(220,38,38,0.15);
+  border: 1px solid rgba(220,38,38,0.3);
+  color: #fca5a5;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+.btn-danger:hover { background: rgba(220,38,38,0.25); }
+
+.btn-save {
+  background: var(--green-bright);
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* ---- CONTAINER ---- */
+.container { max-width: 900px; margin: 0 auto; padding: 0 16px; }
+
+/* ---- SECTIONS ---- */
+.section { padding: 40px 0; border-top: 1px solid var(--card-border); }
+.section:first-child { border-top: none; }
+
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  color: var(--white);
+}
+
+/* ---- RANKING ---- */
+.ranking-list { display: flex; flex-direction: column; gap: 8px; }
+
+.rank-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  transition: background 0.2s;
+}
+.rank-card:hover { background: rgba(255,255,255,0.07); }
+
+.rank-top { border-color: transparent; }
+.rank-1 { background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08)); border-color: rgba(245,158,11,0.3); }
+.rank-2 { background: linear-gradient(135deg, rgba(148,163,184,0.12), rgba(148,163,184,0.05)); border-color: rgba(148,163,184,0.25); }
+.rank-3 { background: linear-gradient(135deg, rgba(180,83,9,0.15), rgba(180,83,9,0.06)); border-color: rgba(180,83,9,0.3); }
+
+.rank-pos { font-size: 20px; width: 30px; text-align: center; flex-shrink: 0; }
+.rank-name { flex: 1; font-weight: 600; font-size: 16px; }
+.rank-stats { display: flex; align-items: center; gap: 14px; }
+.rank-exact { color: var(--text-muted); font-size: 13px; }
+.rank-score {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: var(--green-accent);
+  letter-spacing: 1px;
+  min-width: 60px;
+  text-align: right;
+}
+
+.empty-state { color: var(--text-muted); font-size: 14px; padding: 20px 0; }
+
+/* ---- ADMIN ---- */
+.admin-section {}
+.admin-login { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.admin-panel { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 20px; }
+.admin-panel h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px; }
+.admin-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+.admin-msg { font-size: 13px; margin-top: 8px; min-height: 20px; }
+.admin-msg.success { color: var(--green-accent); }
+.admin-msg.error { color: #fca5a5; }
+
+/* ---- INPUTS ---- */
+.input-field {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--card-border);
+  color: var(--white);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input-field:focus { border-color: var(--green-bright); }
+.input-field::placeholder { color: var(--text-muted); }
+
+/* ---- FILTER BAR ---- */
+.filter-bar, .group-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.filter-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+  padding: 7px 14px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+.filter-btn:hover { border-color: var(--green-bright); color: var(--white); }
+.filter-btn.active {
+  background: var(--green-bright);
+  border-color: var(--green-bright);
+  color: white;
+}
+
+/* ---- MATCHES ---- */
+.group-block {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.group-header {
+  background: rgba(22,163,74,0.15);
+  border-bottom: 1px solid var(--card-border);
+  padding: 10px 16px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: var(--green-accent);
+}
+
+.match-list { list-style: none; }
+
+.match-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--card-border);
+  transition: background 0.15s;
+}
+.match-item:last-child { border-bottom: none; }
+.match-item:hover { background: rgba(255,255,255,0.03); }
+.match-item.played .match-teams { opacity: 1; }
+
+.match-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.team {
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+}
+.team-r { text-align: right; }
+
+.score-badge {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.score-badge.played {
+  background: rgba(22,163,74,0.15);
+  border-color: rgba(22,163,74,0.3);
+  color: var(--green-accent);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.score-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.score-input-admin {
+  width: 50px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--card-border);
+  color: var(--white);
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ---- PAGE HEADER ---- */
+.page-header {
+  background: linear-gradient(135deg, var(--green-mid), var(--green-deep));
+  border-bottom: 1px solid var(--card-border);
+  padding: 16px 0;
+}
+.header-inner { display: flex; align-items: center; gap: 20px; }
+.back-link { color: var(--green-accent); text-decoration: none; font-size: 14px; }
+.back-link:hover { color: var(--white); }
+.page-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; }
+
+/* ---- BET PAGE ---- */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.bet-intro { margin-top: 24px; font-size: 14px; line-height: 1.8; }
+.rules-list { list-style: none; margin: 10px 0; }
+.rules-list li { padding: 3px 0; }
+
+.name-block label { font-size: 14px; color: var(--text-muted); display: block; margin-bottom: 8px; }
+.input-name { width: 100%; max-width: 320px; font-size: 16px; }
+
+/* Match bet card */
+.match-bet-card {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--card-border);
+  transition: background 0.15s;
+}
+.match-bet-card:last-child { border-bottom: none; }
+.match-bet-card.filled { background: rgba(22,163,74,0.07); }
+
+.match-date { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+.match-bet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.team-name { flex: 1; font-size: 14px; font-weight: 500; }
+.team-right { text-align: right; }
+
+.score-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.score-input {
+  width: 54px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--white);
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.score-input:focus { border-color: var(--green-accent); background: rgba(74,222,128,0.1); }
+.score-input::placeholder { color: rgba(255,255,255,0.2); font-size: 14px; }
+/* Hide number spinners */
+.score-input::-webkit-outer-spin-button,
+.score-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.vs-sep { color: var(--text-muted); font-weight: 700; font-size: 16px; }
+
+/* ---- STICKY FOOTER ---- */
+.sticky-footer {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(0deg, var(--green-deep) 60%, transparent);
+  padding: 24px 0 20px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* ---- FOOTER ---- */
+.footer {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+  border-top: 1px solid var(--card-border);
+  margin-top: 20px;
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 600px) {
+  .team-name { font-size: 12px; }
+  .match-bet-row { gap: 6px; }
+  .score-input { width: 46px; font-size: 16px; padding: 7px 4px; }
+  .rank-stats { gap: 8px; }
+  .rank-score { font-size: 18px; min-width: 50px; }
+  .match-teams { flex-wrap: nowrap; }
+  .team { font-size: 12px; }
+  .score-badge { font-size: 11px; padding: 3px 8px; }
+}
+
+/* ---- ADMIN GITHUB ---- */
+.admin-login-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+@media (max-width: 600px) {
+  .admin-login-grid { grid-template-columns: 1fr; }
+}
+
+.admin-help {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+.link { color: var(--green-accent); text-decoration: none; }
+.link:hover { text-decoration: underline; }

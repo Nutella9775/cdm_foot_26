@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚽ Pronostics CDM 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="trophy">🏆</div>
+    <h1>COUPE DU MONDE 2026</h1>
+    <p class="hero-sub">Canada · Mexique · États-Unis</p>
+    <a href="bet.html" class="btn-primary">🎯 Faire mes pronostics</a>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- CLASSEMENT -->
+  <section class="section">
+    <h2 class="section-title">🥇 Classement</h2>
+    <div id="ranking" class="ranking-list">
+      <p class="empty-state">Aucun pronostic importé pour l'instant.</p>
+    </div>
+  </section>
+
+  <!-- ADMIN -->
+  <section class="section admin-section">
+    <h2 class="section-title">🔐 Admin</h2>
+
+    <!-- Formulaire de connexion -->
+    <div id="adminLoginForm" class="admin-login">
+      <input type="password" id="adminPass" placeholder="Mot de passe admin" class="input-field">
+      <button onclick="loginAdmin()" class="btn-secondary">Connexion</button>
+    </div>
+
+    <!-- Panel admin (visible après connexion) -->
+    <div id="adminPanel" style="display:none;" class="admin-panel">
+      <h3>Importer un pronostic</h3>
+      <div class="admin-row">
+        <input type="file" id="fileInput" accept=".json" class="input-field">
+        <button id="importBtn" onclick="importBets()" class="btn-secondary">📥 Importer</button>
+      </div>
+      <div class="admin-row" style="margin-top:12px;">
+        <button id="resetBtn" onclick="resetData()" class="btn-danger">🗑️ Réinitialiser tout</button>
+      </div>
+      <div id="adminMsg" class="admin-msg"></div>
+    </div>
+  </section>
+
+  <!-- MATCHS -->
+  <section class="section">
+    <h2 class="section-title">⚽ Matchs</h2>
+    <div class="filter-bar" id="filterBar"></div>
+    <div id="matches"></div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>CDM 2026 · Pronostics entre collègues · 🇨🇦 🇲🇽 🇺🇸</p>
+</footer>
+
+<script src="matches.js"></script>
+<script src="players.js"></script>
+<script src="scores.js" onerror="console.log('scores.js pas encore créé')"></script>
+<script src="app.js"></script>
+</body>
+</html>

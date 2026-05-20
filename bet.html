@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎯 Mes Pronostics – CDM 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <div class="container header-inner">
+    <a href="index.html" class="back-link">← Retour</a>
+    <h1 class="page-title">🎯 Mes Pronostics</h1>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="bet-intro card">
+    <p><strong>Comment ça marche ?</strong></p>
+    <ul class="rules-list">
+      <li>✅ <strong>3 points</strong> – Score exact</li>
+      <li>✅ <strong>1 point</strong> – Bon vainqueur ou bonne égalité</li>
+      <li>❌ <strong>0 point</strong> – Mauvais résultat</li>
+    </ul>
+    <p>Remplissez le maximum de matchs, téléchargez votre fichier JSON et envoyez-le à l'admin.</p>
+  </div>
+
+  <div class="name-block card">
+    <label for="playerName">Votre prénom :</label>
+    <input type="text" id="playerName" placeholder="Ex: Thomas" class="input-field input-name">
+  </div>
+
+  <div class="group-filter-bar" id="groupFilter"></div>
+
+  <div id="betForm"></div>
+
+  <div class="sticky-footer">
+    <button onclick="exportJSON()" class="btn-primary btn-big">💾 Télécharger mon fichier</button>
+  </div>
+
+</main>
+
+<script src="matches.js"></script>
+<script>
+
+// ---- Group filter ----
+const groups = [...new Set(matches.map(m => m.group))];
+let activeGroup = "all";
+
+function buildFilter() {
+  const bar = document.getElementById("groupFilter");
+  let html = `<button class="filter-btn active" onclick="filterGroup('all', this)">Tous</button>`;
+  groups.forEach(g => {
+    const letter = g.replace("Groupe ", "");
+    html += `<button class="filter-btn" onclick="filterGroup('${g}', this)">${letter}</button>`;
+  });
+  bar.innerHTML = html;
+}
+
+function filterGroup(g, el) {
+  activeGroup = g;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  el.classList.add("active");
+  renderForm();
+}
+
+// ---- Form render ----
+function renderForm() {
+  const div = document.getElementById("betForm");
+  const filtered = activeGroup === "all" ? matches : matches.filter(m => m.group === activeGroup);
+
+  let byGroup = {};
+  filtered.forEach(m => {
+    if (!byGroup[m.group]) byGroup[m.group] = [];
+    byGroup[m.group].push(m);
+  });
+
+  let html = "";
+  for (const g in byGroup) {
+    html += `<div class="group-block">
+      <div class="group-header">${g}</div>`;
+    byGroup[g].forEach(m => {
+      const saved1 = getSaved(m.id, 1);
+      const saved2 = getSaved(m.id, 2);
+      html += `
+      <div class="match-bet-card" id="card-${m.id}">
+        <div class="match-date">${m.date}</div>
+        <div class="match-bet-row">
+          <span class="team-name team-left">${m.flag1} ${m.team1}</span>
+          <div class="score-inputs">
+            <input type="number" min="0" max="20" id="b1-${m.id}" value="${saved1}"
+              placeholder="?" oninput="autoSave(${m.id})" class="score-input">
+            <span class="vs-sep">–</span>
+            <input type="number" min="0" max="20" id="b2-${m.id}" value="${saved2}"
+              placeholder="?" oninput="autoSave(${m.id})" class="score-input">
+          </div>
+          <span class="team-name team-right">${m.team2} ${m.flag2}</span>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  div.innerHTML = html;
+}
+
+// ---- Auto-save to sessionStorage ----
+function autoSave(id) {
+  const v1 = document.getElementById(`b1-${id}`).value;
+  const v2 = document.getElementById(`b2-${id}`).value;
+  if (v1 !== "") sessionStorage.setItem(`b1-${id}`, v1);
+  if (v2 !== "") sessionStorage.setItem(`b2-${id}`, v2);
+  highlightCard(id, v1, v2);
+}
+
+function getSaved(id, n) {
+  return sessionStorage.getItem(`b${n}-${id}`) ?? "";
+}
+
+function highlightCard(id, v1, v2) {
+  const card = document.getElementById(`card-${id}`);
+  if (!card) return;
+  if (v1 !== "" && v2 !== "") {
+    card.classList.add("filled");
+  } else {
+    card.classList.remove("filled");
+  }
+}
+
+// ---- Export ----
+function exportJSON() {
+  const name = document.getElementById("playerName").value.trim();
+  if (!name) {
+    alert("Merci d'entrer votre prénom !");
+    document.getElementById("playerName").focus();
+    return;
+  }
+
+  let bets = {};
+  let count = 0;
+  matches.forEach(m => {
+    const b1 = document.getElementById(`b1-${m.id}`)?.value;
+    const b2 = document.getElementById(`b2-${m.id}`)?.value;
+    if (b1 !== "" && b1 !== undefined) {
+      bets[m.id] = { bet1: parseInt(b1), bet2: parseInt(b2 ?? 0) };
+      count++;
+    }
+  });
+
+  if (count === 0) {
+    alert("Vous n'avez rempli aucun pronostic !");
+    return;
+  }
+
+  const data = { name, bets };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name + "_cdm2026.json";
+  a.click();
+
+  alert(`✅ ${count} pronostic(s) exporté(s) pour ${name} !`);
+}
+
+buildFilter();
+renderForm();
+
+// Restore highlights after render
+matches.forEach(m => {
+  const v1 = getSaved(m.id, 1);
+  const v2 = getSaved(m.id, 2);
+  if (v1 !== "" && v2 !== "") highlightCard(m.id, v1, v2);
+});
+
+</script>
+</body>
+</html>
