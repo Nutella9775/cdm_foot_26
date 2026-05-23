@@ -50,7 +50,7 @@
       <div style="background: rgba(22,163,74,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(22,163,74,0.3); margin-bottom: 20px;">
         <h3 style="color: var(--green-accent);">💾 Exporter les données en dur</h3>
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">
-          Télécharge les fichiers et écrase les anciens dans ton dossier source pour valider tes ajouts définitivement.
+          Télécharge les fichiers et écrase les anciens dans ton dossier source pour valider tes ajouts définitivement sur GitHub Pages.
         </p>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
           <button onclick="downloadPlayersJS()" class="btn-save">📄 Télécharger players.js</button>
@@ -82,7 +82,7 @@
 
 <script src="matches.js"></script>
 <script src="players.js"></script>
-<script src="scores.js"></script>
+<script src="scores.js" onerror="console.log('scores.js pas encore créé')"></script>
 <script src="app.js"></script>
 </body>
 </html>
