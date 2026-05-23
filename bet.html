@@ -8,6 +8,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+  /* Style pour griser et verrouiller visuellement les matchs terminés */
+  .match-bet-card.match-locked {
+    opacity: 0.55;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    pointer-events: none; /* Bloque complètement toute interaction de clic */
+  }
+</style>
 </head>
 <body>
 
@@ -46,9 +55,18 @@
 </main>
 
 <script src="matches.js"></script>
+<script src="scores.js" onerror="console.log('scores.js pas encore créé')"></script>
 <script>
 
-// ---- Group filter ----
+// ÉTAPE 1 : On injecte immédiatement les scores officiels de l'admin dans la liste des matchs
+if (typeof matchScores !== "undefined") {
+  matchScores.forEach(s => {
+    const m = matches.find(x => x.id === s.id);
+    if (m) { m.score1 = s.score1; m.score2 = s.score2; }
+  });
+}
+
+// ---- Filtrage des groupes ----
 const groups = [...new Set(matches.map(m => m.group))];
 let activeGroup = "all";
 
@@ -69,7 +87,7 @@ function filterGroup(g, el) {
   renderForm();
 }
 
-// ---- Form render ----
+// ---- Génération du formulaire de saisie ----
 function renderForm() {
   const div = document.getElementById("betForm");
   const filtered = activeGroup === "all" ? matches : matches.filter(m => m.group === activeGroup);
@@ -82,22 +100,28 @@ function renderForm() {
 
   let html = "";
   for (const g in byGroup) {
-    html += `<div class="group-block">
-      <div class="group-header">${g}</div>`;
+    html += `<div class="group-block"><div class="group-header">${g}</div>`;
+    
     byGroup[g].forEach(m => {
+      const isLocked = m.score1 !== null && m.score2 !== null;
+      
       const saved1 = getSaved(m.id, 1);
       const saved2 = getSaved(m.id, 2);
+      
       html += `
-      <div class="match-bet-card" id="card-${m.id}">
-        <div class="match-date">${m.date}</div>
+      <div class="match-bet-card ${isLocked ? 'match-locked' : ''}" id="card-${m.id}">
+        <div class="match-date">
+          ${m.date} 
+          ${isLocked ? `<span style="color: var(--gold); font-weight: bold; margin-left: 8px;">🔒 Clos (Score Officiel : ${m.score1}-${m.score2})</span>` : ''}
+        </div>
         <div class="match-bet-row">
           <span class="team-name team-left">${m.flag1} ${m.team1}</span>
           <div class="score-inputs">
-            <input type="number" min="0" max="20" id="b1-${m.id}" value="${saved1}"
-              placeholder="?" oninput="autoSave(${m.id})" class="score-input">
+            <input type="number" min="0" max="20" id="b1-${m.id}" value="${isLocked ? '' : saved1}"
+              placeholder="${isLocked ? '-' : '?'}" oninput="autoSave(${m.id})" class="score-input" ${isLocked ? 'disabled' : ''}>
             <span class="vs-sep">–</span>
-            <input type="number" min="0" max="20" id="b2-${m.id}" value="${saved2}"
-              placeholder="?" oninput="autoSave(${m.id})" class="score-input">
+            <input type="number" min="0" max="20" id="b2-${m.id}" value="${isLocked ? '' : saved2}"
+              placeholder="${isLocked ? '-' : '?'}" oninput="autoSave(${m.id})" class="score-input" ${isLocked ? 'disabled' : ''}>
           </div>
           <span class="team-name team-right">${m.team2} ${m.flag2}</span>
         </div>
@@ -106,9 +130,18 @@ function renderForm() {
     html += `</div>`;
   }
   div.innerHTML = html;
+
+  // Restaurer les fonds verts pour les matchs déjà remplis (uniquement ceux ouverts)
+  matches.forEach(m => {
+    if (m.score1 === null) { 
+      const v1 = getSaved(m.id, 1);
+      const v2 = getSaved(m.id, 2);
+      if (v1 !== "" && v2 !== "") highlightCard(m.id, v1, v2);
+    }
+  });
 }
 
-// ---- Auto-save to sessionStorage ----
+// ---- Sauvegarde automatique locale ----
 function autoSave(id) {
   const v1 = document.getElementById(`b1-${id}`).value;
   const v2 = document.getElementById(`b2-${id}`).value;
@@ -131,28 +164,33 @@ function highlightCard(id, v1, v2) {
   }
 }
 
-// ---- Export ----
+// ---- Exportation et Nettoyage automatique ----
 function exportJSON() {
-  const name = document.getElementById("playerName").value.trim();
+  const nameInput = document.getElementById("playerName");
+  const name = nameInput.value.trim();
+  
   if (!name) {
     alert("Merci d'entrer votre prénom !");
-    document.getElementById("playerName").focus();
+    nameInput.focus();
     return;
   }
 
   let bets = {};
   let count = 0;
+  
   matches.forEach(m => {
-    const b1 = document.getElementById(`b1-${m.id}`)?.value;
-    const b2 = document.getElementById(`b2-${m.id}`)?.value;
-    if (b1 !== "" && b1 !== undefined) {
-      bets[m.id] = { bet1: parseInt(b1), bet2: parseInt(b2 ?? 0) };
-      count++;
+    if (m.score1 === null) {
+      const b1 = document.getElementById(`b1-${m.id}`)?.value;
+      const b2 = document.getElementById(`b2-${m.id}`)?.value;
+      if (b1 !== "" && b1 !== undefined) {
+        bets[m.id] = { bet1: parseInt(b1), bet2: parseInt(b2 ?? 0) };
+        count++;
+      }
     }
   });
 
   if (count === 0) {
-    alert("Vous n'avez rempli aucun pronostic !");
+    alert("Vous n'avez rempli aucun pronostic valide (les matchs terminés sont exclus) !");
     return;
   }
 
@@ -163,18 +201,27 @@ function exportJSON() {
   a.download = name + "_cdm2026.json";
   a.click();
 
-  alert(`✅ ${count} pronostic(s) exporté(s) pour ${name} !`);
+  alert(`✅ Fichier généré avec succès ! ${count} pronostic(s) exporté(s) pour ${name}.`);
+
+  // ============================================================
+  //  ZONE DE NETTOYAGE (EFFACE TOUT POUR LE PROCHAIN PRONOSTIC)
+  // ============================================================
+  
+  // 1. Vide le champ du prénom
+  nameInput.value = "";
+  
+  // 2. Supprime toutes les valeurs stockées dans la session
+  matches.forEach(m => {
+    sessionStorage.removeItem(`b1-${m.id}`);
+    sessionStorage.removeItem(`b2-${m.id}`);
+  });
+
+  // 3. Regénère le formulaire vide à l'écran
+  renderForm();
 }
 
 buildFilter();
 renderForm();
-
-// Restore highlights after render
-matches.forEach(m => {
-  const v1 = getSaved(m.id, 1);
-  const v2 = getSaved(m.id, 2);
-  if (v1 !== "" && v2 !== "") highlightCard(m.id, v1, v2);
-});
 
 </script>
 </body>
