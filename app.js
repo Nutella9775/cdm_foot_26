@@ -1,5 +1,5 @@
 // ============================================================
-//  CDM 2026 – app.js (Version Locale / Sans Token)
+//  CDM 2026 – app.js (Version Locale / Sans Token / Verrouillée)
 // ============================================================
 
 const ADMIN_PASSWORD = "cdm_as"; 
@@ -11,20 +11,17 @@ let currentFilter = "all";
 // ============================================================
 
 function initData() {
-  // Charge les joueurs depuis le localStorage s'ils existent, sinon garde ceux du fichier players.js
   const localPlayers = localStorage.getItem("cdm_players");
   if (localPlayers) {
     players = JSON.parse(localPlayers);
   }
 
-  // Charge les scores depuis le localStorage
   const localScores = localStorage.getItem("cdm_scores");
   let scoresToApply = typeof matchScores !== "undefined" ? matchScores : [];
   if (localScores) {
     scoresToApply = JSON.parse(localScores);
   }
 
-  // Applique les scores aux matchs
   scoresToApply.forEach(s => {
     const m = matches.find(x => x.id === s.id);
     if (m) { m.score1 = s.score1; m.score2 = s.score2; }
@@ -96,7 +93,7 @@ function restoreSession() {
 }
 
 // ============================================================
-//  MESSAGES & UTILITAIRES
+//  MESSAGES
 // ============================================================
 
 function showMsg(txt, type) {
@@ -144,7 +141,8 @@ function updateScore(id) {
 
   saveToLocalStorage();
   displayRanking();
-  showMsg(`✅ Score #${id} actualisé ! (N'oublie pas d'exporter en dur)`, "success");
+  displayMatches(); // Force la mise à jour visuelle pour verrouiller l'input
+  showMsg(`✅ Score #${id} actualisé ! (Pensez à exporter en dur)`, "success");
 }
 
 // ============================================================
@@ -193,7 +191,7 @@ function displayRanking() {
 }
 
 // ============================================================
-//  MATCHS
+//  MATCHS (Verrouillage Admin inclus)
 // ============================================================
 
 function displayMatches() {
@@ -209,12 +207,17 @@ function displayMatches() {
     let html = `<div class="group-block"><div class="group-header">${g}</div><ul class="match-list">`;
     groups[g].forEach(m => {
       const played = m.score1 !== null && m.score2 !== null;
+      
+      // Si le match est joué, l'admin ne peut plus le modifier par accident (champs disabled + cadenas)
       const scoreHtml = isAdmin
         ? `<div class="score-edit">
-            <input type="number" id="score1-${m.id}" value="${m.score1??""}" min="0" max="20" class="score-input-admin">
+            <input type="number" id="score1-${m.id}" value="${m.score1??""}" min="0" max="20" class="score-input-admin" ${played ? "disabled" : ""}>
             <span>–</span>
-            <input type="number" id="score2-${m.id}" value="${m.score2??""}" min="0" max="20" class="score-input-admin">
-            <button onclick="updateScore(${m.id})" class="btn-save">💾</button>
+            <input type="number" id="score2-${m.id}" value="${m.score2??""}" min="0" max="20" class="score-input-admin" ${played ? "disabled" : ""}>
+            ${played 
+              ? `<span style="padding: 4px 8px; font-size: 14px;" title="Match verrouillé">🔒</span>`
+              : `<button onclick="updateScore(${m.id})" class="btn-save">💾</button>`
+            }
            </div>`
         : `<span class="score-badge ${played?"played":"pending"}">${played ? m.score1+" – "+m.score2 : m.date}</span>`;
 
@@ -255,7 +258,7 @@ function importBets() {
       saveToLocalStorage();
       displayRanking();
       document.getElementById("fileInput").value = "";
-      showMsg(`✅ ${data.name} intégré ! (N'oublie pas d'exporter en dur)`, "success");
+      showMsg(`✅ ${data.name} intégré ! (Pensez à exporter en dur)`, "success");
     } catch(err) {
       showMsg("❌ Fichier JSON invalide : " + err.message, "error");
     }
@@ -268,7 +271,7 @@ function importBets() {
 // ============================================================
 
 function resetData() {
-  if (!confirm("Effacer TOUS les pronostics et scores de ton navigateur ?")) return;
+  if (!confirm("Effacer TOUS les pronostics et scores enregistrés localement ?")) return;
   players.length = 0;
   matches.forEach(m => { m.score1 = null; m.score2 = null; });
   localStorage.removeItem("cdm_players");
@@ -276,7 +279,7 @@ function resetData() {
   
   displayRanking();
   displayMatches();
-  showMsg("✅ Données réinitialisées.", "success");
+  showMsg("✅ Mémoire locale vidée.", "success");
 }
 
 // ============================================================
