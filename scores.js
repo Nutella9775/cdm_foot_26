@@ -1,9 +1,9 @@
-// Scores CDM 2026 – mis à jour automatiquement
+// Scores CDM 2026
 const matchScores = [
   {
     "id": 1,
-    "score1": 5,
-    "score2": 1
+    "score1": 2,
+    "score2": 2
   },
   {
     "id": 2,
